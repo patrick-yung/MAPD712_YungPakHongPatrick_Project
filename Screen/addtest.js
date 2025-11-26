@@ -1,5 +1,8 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useState } from 'react';
+import BloodTest from '../Components/bloodTest'
+import BloodPressureTest from '../Components/bloodPressureTest';
+import BloodSugarTest from '../Components/bloodSugarTest';
 
 export default function AddTests({ route, navigation }) {
     const { patient } = route.params;
@@ -7,12 +10,20 @@ export default function AddTests({ route, navigation }) {
     const [testResult, setTestResult] = useState('');
     const API_URL = 'http://localhost:3000';
 
+    const testTypes = [
+        'Blood Test',
+        'Blood Pressure',
+        'Blood Sugar',
+        'Cholesterol Test'
+    ];
+
     const addTest = async () => {
         try {
             const newTest = {
                 testType: testType,
                 testResult: testResult,
             };
+            
 
             const updatedPatient = {
                 name: patient.name,
@@ -41,36 +52,41 @@ export default function AddTests({ route, navigation }) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Add New Test</Text>
-                <Text style={styles.headerSubtitle}>Enter test information below</Text>
+                <Text style={styles.headerSubtitle}>Select test type and enter results</Text>
             </View>
 
             <View style={styles.formContainer}>
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Test Type</Text>
-                    <TextInput
-                        style={styles.input}
-                        onChangeText={setTestType}
-                        value={testType}
-                        placeholder="e.g., Blood Test, X-Ray, MRI"
-                        placeholderTextColor="#999"
-                    />
+                    <Text style={styles.subLabel}>Select one test type:</Text>
+                    
+                    <ScrollView style={styles.checkboxContainer} showsVerticalScrollIndicator={false}>
+                        {testTypes.map((test) => (
+                            <TouchableOpacity
+                                key={test}
+                                style={styles.checkboxItem}
+                                onPress={() => setTestType(test)}
+                            >
+                                <View style={[
+                                    styles.checkbox,
+                                    testType === test && styles.checkboxSelected
+                                ]}>
+                                    {testType === test && (
+                                        <Text style={styles.checkmark}>✓</Text>
+                                    )}
+                                </View>
+                                <Text style={styles.checkboxLabel}>{test}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
                 </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Test Result</Text>
-                    <TextInput
-                        style={[styles.input, styles.textArea]}
-                        onChangeText={setTestResult}
-                        value={testResult}
-                        placeholder="Enter test results"
-                        placeholderTextColor="#999"
-                        multiline
-                        numberOfLines={3}
-                        textAlignVertical="top"
-                    />
+                <View style ={styles.componentContainer}>
+                    {testType === 'Blood Test' && <BloodTest onSelectBloodType={(result) => setTestResult(result)} />}
+                    {testType == 'Blood Pressure' && <BloodPressureTest onBloodPressure ={(result) => setTestResult(result)}></BloodPressureTest>}
+                    {testType == 'Blood Sugar' && <BloodSugarTest onSugarLevel = {(result) => setTestResult(result)}> </BloodSugarTest>}
                 </View>
             </View>
-            
+                
             <View style={styles.bottomButtonContainer}>
                 <TouchableOpacity
                     style={styles.cancelButton}
@@ -131,6 +147,46 @@ const styles = StyleSheet.create({
         color: '#333',
         marginBottom: 8,
     },
+    subLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 15,
+    },
+    checkboxContainer: {
+        maxHeight: 200,
+    },
+    checkboxItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: '#ddd',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    checkboxSelected: {
+        backgroundColor: '#007AFF',
+        borderColor: '#007AFF',
+    },
+    checkmark: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    checkboxLabel: {
+        fontSize: 16,
+        color: '#333',
+        flex: 1,
+    },
     input: {
         borderColor: '#ddd',
         borderWidth: 1,
@@ -144,6 +200,24 @@ const styles = StyleSheet.create({
     textArea: {
         minHeight: 100,
     },
+    selectedTestContainer: {
+        backgroundColor: '#e8f5e8',
+        padding: 15,
+        borderRadius: 8,
+        marginBottom: 20,
+        borderLeftWidth: 4,
+        borderLeftColor: '#4CAF50',
+    },
+    selectedTestLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 5,
+    },
+    selectedTestValue: {
+        fontSize: 16,
+        color: '#2e7d32',
+        fontWeight: '600',
+    },
     bottomButtonContainer: {
         position: 'absolute',
         bottom: 20,
@@ -152,6 +226,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         gap: 12,
+    },    componentContainer: {
+        minHeight: 300,
+        marginBottom: 20,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        overflow: 'hidden',
     },
     cancelButton: {
         flex: 1,

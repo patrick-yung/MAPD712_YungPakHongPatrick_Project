@@ -16,7 +16,6 @@ export default function AddPatients({ route, navigation }) {
     const API_URL = 'http://localhost:3000';
 
     const addPatient = async (patient) => {
-
         if (!patient.name || !patient.age || !patient.deparment) {
             console.error('Patient must have a name, age and department');
             return;
