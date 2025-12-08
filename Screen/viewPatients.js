@@ -26,7 +26,7 @@ export default function ViewPatients({ route, navigation }) {
         } else {
             const filtered = allpatients.filter(patient =>
                 patient.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                patient.department?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                patient.deparment?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 patient.age?.toString().includes(searchQuery)
             );
             setFilteredPatients(filtered);
@@ -82,7 +82,7 @@ export default function ViewPatients({ route, navigation }) {
             </View>
             <View style={[styles.cell, styles.departmentColumn]}>
                 <Text style={styles.cellText} numberOfLines={1}>
-                    {item.department}
+                    {item.deparment}
                 </Text>
             </View>
             <View style={[styles.cell, styles.iconsColumn]}>

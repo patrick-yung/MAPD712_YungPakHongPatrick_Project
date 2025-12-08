@@ -22,10 +22,15 @@ export default function BloodPressureTest({ onBloodPressure }){
     };
 
     const handleSystolicChange = (value) => {
+
+        
         if (value === '') {
             onBloodPressure(`${value}/${diastolic}`);
             setSystolic(value);
             return;
+        }
+        if (value > 300){
+            return
         }
                 
         const diastolicNum = diastolic === '' ? Infinity : parseInt(diastolic);
