@@ -20,26 +20,96 @@ export default function ViewPatients({ route, navigation }) {
         fetchPatients();
     }, []);
 
+    // Function to get the latest test of a specific type
+    const getLatestTest = useCallback((patient, testType) => {
+        if (!patient.test || patient.test.length === 0) return null;
+        
+        // Filter tests by type and sort by date (newest first)
+        const testsOfType = patient.test
+            .filter(test => test.testType === testType)
+            .sort((a, b) => {
+                const dateA = a.testDate ? new Date(a.testDate).getTime() : 0;
+                const dateB = b.testDate ? new Date(b.testDate).getTime() : 0;
+                return dateB - dateA; // Most recent first
+            });
+        
+        return testsOfType.length > 0 ? testsOfType[0] : null;
+    }, []);
+
+    // Function to check if a patient has warning icons based on latest tests
+    const hasWarningIcons = useCallback((patient) => {
+        const latestBloodPressureTest = getLatestTest(patient, TEST_TYPES.BLOOD_PRESSURE);
+        const latestBloodSugarTest = getLatestTest(patient, TEST_TYPES.BLOOD_SUGAR);
+        
+        let hasBloodPressure = false;
+        if (latestBloodPressureTest && latestBloodPressureTest.testResult) {
+            const match = latestBloodPressureTest.testResult.match(/\d+/);
+            if (match) {
+                const numericValue = parseInt(match[0], 10);
+                hasBloodPressure = numericValue > 120;
+            }
+        }
+        
+        let hasBloodSugar = false;
+        if (latestBloodSugarTest && latestBloodSugarTest.testResult) {
+            const match = latestBloodSugarTest.testResult.match(/\d+/);
+            if (match) {
+                const numericValue = parseInt(match[0], 10);
+                hasBloodSugar = numericValue > 70;
+            }
+        }
+        
+        return hasBloodPressure || hasBloodSugar;
+    }, [getLatestTest]);
+
+    // Function to sort patients - those with icons first
+    const sortPatientsByIcons = useCallback((patients) => {
+        return [...patients].sort((a, b) => {
+            const aHasIcons = hasWarningIcons(a);
+            const bHasIcons = hasWarningIcons(b);
+            
+            if (aHasIcons === bHasIcons) return 0;
+            if (aHasIcons && !bHasIcons) return -1;
+            return 1;
+        });
+    }, [hasWarningIcons]);
+
     useEffect(() => {
         if (searchQuery.trim() === '') {
-            setFilteredPatients(allpatients);
+            const sortedPatients = sortPatientsByIcons(allpatients);
+            setFilteredPatients(sortedPatients);
         } else {
             const filtered = allpatients.filter(patient =>
                 patient.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 patient.deparment?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 patient.age?.toString().includes(searchQuery)
             );
-            setFilteredPatients(filtered);
+            const sortedFiltered = sortPatientsByIcons(filtered);
+            setFilteredPatients(sortedFiltered);
         }
-    }, [searchQuery, allpatients]);
+    }, [searchQuery, allpatients, sortPatientsByIcons]);
 
     const renderImages = useCallback((patient) => {
-        const hasBloodPressure = patient.test?.some(test => 
-            test.testType === TEST_TYPES.BLOOD_PRESSURE
-        );
-        const hasBloodSugar = patient.test?.some(test => 
-            test.testType === TEST_TYPES.BLOOD_SUGAR
-        );
+        const latestBloodPressureTest = getLatestTest(patient, TEST_TYPES.BLOOD_PRESSURE);
+        const latestBloodSugarTest = getLatestTest(patient, TEST_TYPES.BLOOD_SUGAR);
+        
+        let hasBloodPressure = false;
+        if (latestBloodPressureTest && latestBloodPressureTest.testResult) {
+            const match = latestBloodPressureTest.testResult.match(/\d+/);
+            if (match) {
+                const numericValue = parseInt(match[0], 10);
+                hasBloodPressure = numericValue > 120;
+            }
+        }
+        
+        let hasBloodSugar = false;
+        if (latestBloodSugarTest && latestBloodSugarTest.testResult) {
+            const match = latestBloodSugarTest.testResult.match(/\d+/);
+            if (match) {
+                const numericValue = parseInt(match[0], 10);
+                hasBloodSugar = numericValue > 70;
+            }
+        }
 
         return (
             <View style={styles.imagesRow}>
@@ -57,7 +127,7 @@ export default function ViewPatients({ route, navigation }) {
                 )}
             </View>
         );
-    }, []);
+    }, [getLatestTest]);
 
     const renderPatientRow = useCallback(({ item, index }) => (
         <TouchableOpacity 
@@ -91,7 +161,6 @@ export default function ViewPatients({ route, navigation }) {
         </TouchableOpacity>
     ), [navigation, renderImages]);
 
-
     const Header = () => (
         <View style={styles.horizontal}>
             <View style={styles.usernameStyle}>
@@ -106,7 +175,6 @@ export default function ViewPatients({ route, navigation }) {
         </View>
     );
 
-    // Search bar component
     const SearchBar = () => (
         <View style={styles.searchContainer}>
             <View style={styles.searchInputContainer}>
@@ -130,7 +198,6 @@ export default function ViewPatients({ route, navigation }) {
         </View>
     );
 
-    // Table header component
     const TableHeader = () => (
         <View style={[styles.row, styles.header]}>
             <Text style={[styles.headerCell, styles.nameColumn]}>Patient Name</Text>
@@ -159,9 +226,7 @@ export default function ViewPatients({ route, navigation }) {
     return (
         <View style={styles.container}>
             <Header />
-            
             <SearchBar />
-            
             <View style={styles.tableContainer}>
                 <TableHeader />
                 <FlatList
@@ -181,7 +246,6 @@ export default function ViewPatients({ route, navigation }) {
                     }
                 /> 
             </View>
-
             <TouchableOpacity 
                 style={styles.addPatientButton}
                 onPress={() => navigation.navigate('addPatients')}
@@ -192,6 +256,7 @@ export default function ViewPatients({ route, navigation }) {
     );
 }
 
+// Styles remain exactly the same
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -218,7 +283,6 @@ const styles = StyleSheet.create({
         color: '#4a5568',
         letterSpacing: -0.3,
     },
-    // Search bar styles
     searchContainer: {
         marginHorizontal: 8,
         marginTop: 16,

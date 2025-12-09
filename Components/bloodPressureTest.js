@@ -32,6 +32,7 @@ export default function BloodPressureTest({ onBloodPressure }){
         if (value > 300){
             return
         }
+        
                 
         const diastolicNum = diastolic === '' ? Infinity : parseInt(diastolic);
         

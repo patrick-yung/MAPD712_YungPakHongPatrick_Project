@@ -1,8 +1,6 @@
 import { StyleSheet, View, FlatList, Image, Text, ScrollView, TextInput, Button, TouchableOpacity, Alert } from 'react-native';
 import { useEffect, useState } from 'react';
 
-
-
 export default function ViewPatientsDetails({ route, navigation }) {
     const { patient } = route.params;
     const testTypes = [
@@ -11,11 +9,9 @@ export default function ViewPatientsDetails({ route, navigation }) {
         'Blood Sugar',
         'Cholesterol Test'
     ];
-            const API_URL = 'http://localhost:3000';
-
+    const API_URL = 'http://localhost:3000';
 
     const deletePatient = async(patient) => {
-
         if(!patient.name){
             console.error('Patient Name is not provided')
             return;
@@ -29,13 +25,9 @@ export default function ViewPatientsDetails({ route, navigation }) {
                 body: JSON.stringify(patient),
             });
             navigation.navigate('viewPatients');
-
-
         } catch(error){
             console.error('Error delete patient:', error);
         }
-
-
     }
 
     const handleDeletePatient = () => {
@@ -52,12 +44,23 @@ export default function ViewPatientsDetails({ route, navigation }) {
                     style: "destructive",
                     onPress: () => {
                         console.log('Deleting patient:', patient.name);
-                         deletePatient(patient);
+                        deletePatient(patient);
                         navigation.navigate('viewPatients');
                     }
                 }
             ]
         );
+    };
+
+    // Simple function to format date
+    const formatDate = (timestamp) => {
+        if (!timestamp) return '';
+        try {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        } catch (error) {
+            return '';
+        }
     };
 
     return (
@@ -88,22 +91,30 @@ export default function ViewPatientsDetails({ route, navigation }) {
 
             <View style={styles.testsSection}>
                 <Text style={styles.sectionTitle}>Test Results</Text>
-                <FlatList
-                    data={patient.test || []}
-                    renderItem={({ item, index }) => (
-                        <View style={styles.testItem}>
-                            <Text style={styles.testType}>{item.testType || `Test ${index + 1}`}</Text>
-                            <Text style={styles.testResult}>{item.testResult || 'No result available'}</Text>
-                            {item.date && <Text style={styles.testDate}>Date: {item.date}</Text>}
-                        </View>
-                    )}
-                    keyExtractor={(item, index) => index.toString()}
-                    ListEmptyComponent={
-                        <View style={styles.emptyState}>
-                            <Text style={styles.emptyText}>No tests available</Text>
-                        </View>
-                    }
-                />  
+                <View style={styles.testsListContainer}>
+                    <FlatList
+                        data={patient.test || []}
+                        renderItem={({ item, index }) => (
+                            <View style={styles.testItem}>
+                                <Text style={styles.testType}>{item.testType || `Test ${index + 1}`}</Text>
+                                <Text style={styles.testResult}>{item.testResult || 'No result available'}</Text>
+                                {(item.testDate || item.date) && (
+                                    <Text style={styles.testDate}>
+                                        Date: {formatDate(item.testDate || item.date)}
+                                    </Text>
+                                )}
+                            </View>
+                        )}
+                        keyExtractor={(item, index) => index.toString()}
+                        ListEmptyComponent={
+                            <View style={styles.emptyState}>
+                                <Text style={styles.emptyText}>No tests available</Text>
+                            </View>
+                        }
+                        showsVerticalScrollIndicator={true}
+                        style={styles.flatList}
+                    />  
+                </View>
             </View>
             <View style={styles.bottomButtonContainer}>
                 <TouchableOpacity
@@ -238,6 +249,13 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 6,
         elevation: 3,
+        marginBottom: 90, // Added margin to prevent overlap with bottom buttons
+    },
+    testsListContainer: {
+        flex: 1,
+    },
+    flatList: {
+        flex: 1,
     },
     bottomButtonContainer: {
         position: 'absolute',

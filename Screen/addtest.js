@@ -19,32 +19,36 @@ export default function AddTests({ route, navigation }) {
 
     const addTest = async () => {
         try {
+            // Get current date and time
+            const now = new Date();
+            
             const newTest = {
                 testType: testType,
                 testResult: testResult,
-            };
-            
-
-            const updatedPatient = {
-                name: patient.name,
-                age: patient.age,
-                department: patient.department,
-                tests: newTest
+                testDate: now.toISOString() // ISO format timestamp
             };
 
+            // Send the test data correctly
             const response = await fetch(`${API_URL}/patients/${patient._id}/test`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(updatedPatient),
+                body: JSON.stringify({
+                    tests: newTest  // Send test in 'tests' field
+                }),
             });
             
-            const newPatient = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const updatedPatient = await response.json();
             navigation.navigate('viewPatients');
-            console.log('Patient Test added:', newPatient);
+            console.log('Patient Test added:', updatedPatient);
         } catch (error) {
-            console.error('Error adding patient:', error);
+            console.error('Error adding test:', error);
+            // You might want to show an error message to the user here
         }
     }
 
@@ -80,7 +84,7 @@ export default function AddTests({ route, navigation }) {
                         ))}
                     </ScrollView>
                 </View>
-                <View style ={styles.componentContainer}>
+                <View style={styles.componentContainer}>
                     {testType === 'Blood Test' && <BloodTest onSelectBloodType={(result) => setTestResult(result)} />}
                     {testType == 'Blood Pressure' && <BloodPressureTest onBloodPressure ={(result) => setTestResult(result)}></BloodPressureTest>}
                     {testType == 'Blood Sugar' && <BloodSugarTest onSugarLevel = {(result) => setTestResult(result)}> </BloodSugarTest>}
@@ -187,37 +191,6 @@ const styles = StyleSheet.create({
         color: '#333',
         flex: 1,
     },
-    input: {
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        paddingVertical: 12,
-        fontSize: 16,
-        backgroundColor: '#fafafa',
-        minHeight: 50,
-    },
-    textArea: {
-        minHeight: 100,
-    },
-    selectedTestContainer: {
-        backgroundColor: '#e8f5e8',
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 20,
-        borderLeftWidth: 4,
-        borderLeftColor: '#4CAF50',
-    },
-    selectedTestLabel: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 5,
-    },
-    selectedTestValue: {
-        fontSize: 16,
-        color: '#2e7d32',
-        fontWeight: '600',
-    },
     bottomButtonContainer: {
         position: 'absolute',
         bottom: 20,
@@ -226,7 +199,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         gap: 12,
-    },    componentContainer: {
+    },
+    componentContainer: {
         minHeight: 300,
         marginBottom: 20,
         backgroundColor: '#fff',
